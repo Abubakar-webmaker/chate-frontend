@@ -31,8 +31,7 @@ const Login = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-800 flex items-center justify-center p-4">
       <div className="bg-white/10 backdrop-blur-lg rounded-2xl shadow-2xl p-8 w-full max-w-md border border-white/20">
-        
-        {/* Logo */}
+
         <div className="text-center mb-8">
           <div className="text-5xl mb-3">💬</div>
           <h1 className="text-3xl font-bold text-white">ChatApp</h1>
