@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import axios from 'axios';
 import socket from '../socket';
 import { useAuth } from '../context/AuthContext';
@@ -31,6 +31,15 @@ const Chat = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  const fetchUsers = useCallback(async () => {
+    try {
+      const res = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/users`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setUsers(res.data);
+    } catch (err) { console.log(err); }
+  }, [token]);
+
   useEffect(() => {
     if (!user) { navigate('/'); return; }
     socket.emit('userOnline', user._id);
@@ -57,16 +66,7 @@ const Chat = () => {
       socket.off('groupMessage');
       socket.off('userStatusChanged');
     };
-  }, [user, selectedUser, activeRoom]);
-
-  const fetchUsers = async () => {
-    try {
-      const res = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/users`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setUsers(res.data);
-    } catch (err) { console.log(err); }
-  };
+  }, [user, selectedUser, activeRoom, navigate, fetchUsers]);
 
   const fetchPrivateMessages = async (receiverId: string) => {
     try {
