@@ -33,7 +33,7 @@ const Chat = () => {
 
   const fetchUsers = useCallback(async () => {
     try {
-      const res = await axios.get('http://localhost:5000/api/users', {
+      const res = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/users`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setUsers(res.data);
@@ -70,7 +70,7 @@ const Chat = () => {
 
   const fetchPrivateMessages = async (receiverId: string) => {
     try {
-      const res = await axios.get(`http://localhost:5000/api/messages/${receiverId}`, {
+      const res = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/messages/${receiverId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setMessages(res.data);
@@ -79,7 +79,7 @@ const Chat = () => {
 
   const fetchGroupMessages = async (room: string) => {
     try {
-      const res = await axios.get(`http://localhost:5000/api/messages/group/${room}`, {
+      const res = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/messages/group/${room}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setMessages(res.data);
@@ -240,7 +240,7 @@ const Chat = () => {
               </div>
             </>
           ) : (
-            <p className="text-gray-400 font-medium">Select Someone</p>
+            <p className="text-gray-400 font-medium">Choose someone</p>
           )}
         </div>
 
