@@ -37,11 +37,17 @@ const Chat = () => {
         headers: { Authorization: `Bearer ${token}` }
       });
       setUsers(res.data);
-    } catch (err) { console.log(err); }
+    } catch (err) {
+      console.log(err);
+    }
   }, [token]);
 
   useEffect(() => {
-    if (!user) { navigate('/'); return; }
+    if (!user) {
+      navigate('/');
+      return;
+    }
+
     socket.emit('userOnline', user._id);
     fetchUsers();
 
@@ -58,7 +64,7 @@ const Chat = () => {
     });
 
     socket.on('userStatusChanged', ({ userId, isOnline }: { userId: string; isOnline: boolean }) => {
-      setUsers((prev) => prev.map((u) => u._id === userId ? { ...u, isOnline } : u));
+      setUsers((prev) => prev.map((u) => (u._id === userId ? { ...u, isOnline } : u)));
     });
 
     return () => {
@@ -74,7 +80,9 @@ const Chat = () => {
         headers: { Authorization: `Bearer ${token}` }
       });
       setMessages(res.data);
-    } catch (err) { console.log(err); }
+    } catch (err) {
+      console.log(err);
+    }
   };
 
   const fetchGroupMessages = async (room: string) => {
@@ -83,7 +91,9 @@ const Chat = () => {
         headers: { Authorization: `Bearer ${token}` }
       });
       setMessages(res.data);
-    } catch (err) { console.log(err); }
+    } catch (err) {
+      console.log(err);
+    }
   };
 
   const selectUser = (u: User) => {
@@ -105,11 +115,17 @@ const Chat = () => {
 
   const sendMessage = () => {
     if (!newMessage.trim()) return;
+
     if (isGroup) {
       socket.emit('groupMessage', { senderId: user?._id, room: activeRoom, message: newMessage });
     } else {
-      socket.emit('privateMessage', { senderId: user?._id, receiverId: selectedUser?._id, message: newMessage });
+      socket.emit('privateMessage', {
+        senderId: user?._id,
+        receiverId: selectedUser?._id,
+        message: newMessage
+      });
     }
+
     setNewMessage('');
   };
 
@@ -117,191 +133,259 @@ const Chat = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  const handleLogout = () => { logout(); navigate('/'); };
+  const handleLogout = () => {
+    logout();
+    navigate('/');
+  };
 
   const groups = ['general', 'random', 'tech'];
+  const onlineUsers = users.filter((u) => u.isOnline);
+  const currentTitle = isGroup ? `# ${activeRoom}` : selectedUser?.username;
+  const currentSubtitle = isGroup
+    ? `${users.length} members in workspace`
+    : selectedUser?.isOnline
+      ? 'Online now'
+      : 'Offline';
 
   return (
-    <div className="h-screen flex bg-gray-100 overflow-hidden">
-
-      {/* Mobile overlay */}
+    <div className="flex h-screen overflow-hidden bg-[#313338] text-[#dbdee1]">
       {sidebarOpen && (
         <div
-          className="fixed inset-0 bg-black/50 z-20 lg:hidden"
+          className="fixed inset-0 z-20 bg-black/70 lg:hidden"
           onClick={() => setSidebarOpen(false)}
         />
       )}
 
-      {/* Sidebar */}
-      <div className={`
-        fixed lg:static inset-y-0 left-0 z-30
-        w-72 bg-gradient-to-b from-indigo-900 to-purple-900
-        flex flex-col transition-transform duration-300
-        ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
-      `}>
+      <aside className="hidden w-[72px] shrink-0 flex-col items-center gap-3 bg-[#1e1f22] py-3 md:flex">
+        <button className="relative grid h-12 w-12 place-items-center rounded-2xl bg-[#5865f2] text-lg font-black text-white transition-all hover:rounded-xl">
+          C
+          <span className="absolute -left-3 h-10 w-1 rounded-r-full bg-white" />
+        </button>
+        <div className="h-px w-8 bg-[#35363c]" />
+        {groups.map((room) => (
+          <button
+            key={`rail-${room}`}
+            onClick={() => joinGroup(room)}
+            title={room}
+            className={`grid h-12 w-12 place-items-center rounded-3xl text-lg font-bold uppercase transition-all hover:rounded-xl hover:bg-[#5865f2] hover:text-white ${
+              activeRoom === room ? 'rounded-xl bg-[#5865f2] text-white' : 'bg-[#313338] text-[#b5bac1]'
+            }`}
+          >
+            {room[0]}
+          </button>
+        ))}
+      </aside>
 
-        {/* Sidebar Header */}
-        <div className="p-4 border-b border-white/10">
-          <div className="flex items-center justify-between">
+      <div
+        className={`fixed inset-y-0 left-0 z-30 flex w-72 flex-col border-r border-black/20 bg-[#2b2d31] transition-transform duration-300 lg:static ${
+          sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+        }`}
+      >
+        <div className="flex h-12 items-center justify-between border-b border-black/30 px-4 shadow-sm">
+          <h1 className="truncate text-sm font-semibold text-white">ChatApp Workspace</h1>
+          <button
+            onClick={handleLogout}
+            className="rounded px-2 py-1 text-xs font-semibold text-[#b5bac1] transition hover:bg-[#404249] hover:text-white"
+          >
+            Logout
+          </button>
+        </div>
+
+        <div className="p-3">
+          <div className="rounded-lg bg-[#1e1f22] p-3">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-purple-500 rounded-full flex items-center justify-center text-white font-bold text-lg">
+              <div className="grid h-10 w-10 place-items-center rounded-full bg-[#5865f2] text-base font-bold text-white">
                 {user?.username?.[0]?.toUpperCase()}
               </div>
-              <div>
-                <p className="text-white font-semibold text-sm">{user?.username}</p>
-                <p className="text-green-400 text-xs">● Online</p>
+              <div className="min-w-0">
+                <p className="truncate text-sm font-semibold text-white">{user?.username}</p>
+                <p className="text-xs text-[#23a559]">Online</p>
               </div>
             </div>
-            <button
-              onClick={handleLogout}
-              className="text-white/60 hover:text-red-400 transition text-sm"
-            >
-              Logout
-            </button>
           </div>
         </div>
 
-        {/* Groups */}
-        <div className="px-3 pt-4">
-          <p className="text-white/40 text-xs font-semibold uppercase tracking-wider px-2 mb-2">
-            Groups
+        <div className="px-2">
+          <p className="px-2 pb-1 text-xs font-bold uppercase tracking-wide text-[#949ba4]">
+            Text Channels
           </p>
           {groups.map((room) => (
             <button
               key={room}
               onClick={() => joinGroup(room)}
-              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl mb-1 transition-all text-left ${
+              className={`mb-0.5 flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-[15px] font-medium transition ${
                 activeRoom === room
-                  ? 'bg-white/20 text-white'
-                  : 'text-white/70 hover:bg-white/10 hover:text-white'
+                  ? 'bg-[#404249] text-white'
+                  : 'text-[#949ba4] hover:bg-[#35373c] hover:text-[#dbdee1]'
               }`}
             >
-              <span className="text-lg">#</span>
-              <span className="font-medium capitalize">{room}</span>
+              <span className="text-xl leading-none text-[#80848e]">#</span>
+              <span className="capitalize">{room}</span>
             </button>
           ))}
         </div>
 
-        {/* Users */}
-        <div className="px-3 pt-4 flex-1 overflow-y-auto">
-          <p className="text-white/40 text-xs font-semibold uppercase tracking-wider px-2 mb-2">
+        <div className="flex-1 overflow-y-auto px-2 pt-5">
+          <p className="px-2 pb-1 text-xs font-bold uppercase tracking-wide text-[#949ba4]">
             Direct Messages
           </p>
           {users.map((u) => (
             <button
               key={u._id}
               onClick={() => selectUser(u)}
-              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl mb-1 transition-all text-left ${
+              className={`mb-0.5 flex w-full items-center gap-3 rounded px-2 py-2 text-left transition ${
                 selectedUser?._id === u._id
-                  ? 'bg-white/20 text-white'
-                  : 'text-white/70 hover:bg-white/10 hover:text-white'
+                  ? 'bg-[#404249] text-white'
+                  : 'text-[#949ba4] hover:bg-[#35373c] hover:text-[#dbdee1]'
               }`}
             >
               <div className="relative">
-                <div className="w-8 h-8 bg-purple-400 rounded-full flex items-center justify-center text-white text-sm font-bold">
+                <div className="grid h-8 w-8 place-items-center rounded-full bg-[#5865f2] text-sm font-bold text-white">
                   {u.username[0].toUpperCase()}
                 </div>
-                <span className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-indigo-900 ${
-                  u.isOnline ? 'bg-green-400' : 'bg-gray-400'
-                }`} />
+                <span
+                  className={`absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-[#2b2d31] ${
+                    u.isOnline ? 'bg-[#23a559]' : 'bg-[#80848e]'
+                  }`}
+                />
               </div>
-              <span className="font-medium text-sm">{u.username}</span>
+              <span className="truncate text-sm font-medium">{u.username}</span>
             </button>
           ))}
         </div>
+
+        <div className="border-t border-black/20 bg-[#232428] p-3">
+          <div className="flex items-center justify-between text-xs text-[#949ba4]">
+            <span>{onlineUsers.length} online</span>
+            <span>{users.length} members</span>
+          </div>
+        </div>
       </div>
 
-      {/* Main Chat Area */}
-      <div className="flex-1 flex flex-col min-w-0">
-
-        {/* Chat Header */}
-        <div className="bg-white border-b border-gray-200 px-4 py-3 flex items-center gap-3 shadow-sm">
+      <main className="flex min-w-0 flex-1 flex-col">
+        <div className="flex h-12 items-center gap-3 border-b border-black/30 bg-[#313338] px-4 shadow-sm">
           <button
-            className="lg:hidden text-gray-500 hover:text-gray-700"
+            className="rounded p-1 text-[#b5bac1] transition hover:bg-[#404249] hover:text-white lg:hidden"
             onClick={() => setSidebarOpen(true)}
+            aria-label="Open sidebar"
           >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
             </svg>
           </button>
 
-          {(selectedUser || isGroup) ? (
+          {selectedUser || isGroup ? (
             <>
-              <div className="w-9 h-9 bg-gradient-to-br from-purple-400 to-pink-400 rounded-full flex items-center justify-center text-white font-bold">
-                {isGroup ? '#' : selectedUser?.username[0].toUpperCase()}
+              <div className="grid h-8 w-8 place-items-center rounded-full bg-[#404249] text-base font-bold text-[#b5bac1]">
+                {isGroup ? '#' : selectedUser?.username?.[0]?.toUpperCase()}
               </div>
-              <div>
-                <p className="font-semibold text-gray-800">
-                  {isGroup ? `# ${activeRoom}` : selectedUser?.username}
-                </p>
-                <p className="text-xs text-gray-400">
-                  {isGroup ? 'Group Chat' : selectedUser?.isOnline ? '🟢 Online' : '⚫ Offline'}
-                </p>
+              <div className="min-w-0">
+                <p className="truncate font-semibold text-white">{currentTitle}</p>
+                <p className="text-xs text-[#949ba4]">{currentSubtitle}</p>
               </div>
             </>
           ) : (
-            <p className="text-gray-400 font-medium">Choose someone</p>
+            <p className="font-medium text-[#949ba4]">Select a channel or direct message</p>
           )}
         </div>
 
-        {/* Messages */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-3">
-          {messages.length === 0 && (selectedUser || isGroup) && (
-            <div className="flex flex-col items-center justify-center h-full text-gray-400">
-              <div className="text-5xl mb-3">💬</div>
-              <p className="font-medium">Conversation shuru karo!</p>
-            </div>
-          )}
-
-          {messages.map((msg, index) => {
-            const isMe = msg.senderId === user?._id || msg.sender?._id === user?._id;
-            return (
-              <div key={index} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
-                <div className={`max-w-xs lg:max-w-md xl:max-w-lg ${isMe ? 'items-end' : 'items-start'} flex flex-col`}>
-                  {!isMe && (
-                    <p className="text-xs text-purple-500 font-semibold mb-1 px-1">
-                      {msg.sender?.username || 'User'}
-                    </p>
-                  )}
-                  <div className={`px-4 py-2.5 rounded-2xl text-sm leading-relaxed ${
-                    isMe
-                      ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-br-sm'
-                      : 'bg-white text-gray-800 shadow-sm rounded-bl-sm'
-                  }`}>
-                    {msg.message}
+        <div className="flex min-h-0 flex-1">
+          <section className="flex min-w-0 flex-1 flex-col">
+            <div className="flex-1 space-y-1 overflow-y-auto px-4 py-5">
+              {messages.length === 0 && (selectedUser || isGroup) && (
+                <div className="flex h-full flex-col justify-end pb-6 text-[#949ba4]">
+                  <div className="mb-4 grid h-16 w-16 place-items-center rounded-full bg-[#41434a] text-3xl font-bold text-white">
+                    {isGroup ? '#' : selectedUser?.username?.[0]?.toUpperCase()}
                   </div>
+                  <p className="text-2xl font-bold text-white">
+                    {isGroup ? `Welcome to #${activeRoom}` : `This is the start of your chat with ${selectedUser?.username}.`}
+                  </p>
+                  <p className="mt-1 text-sm">Send a message to begin the conversation.</p>
+                </div>
+              )}
+
+              {messages.map((msg, index) => {
+                const isMe = msg.senderId === user?._id || msg.sender?._id === user?._id;
+                const senderName = isMe ? user?.username : msg.sender?.username || 'User';
+
+                return (
+                  <div key={index} className="group flex gap-4 rounded px-1 py-1.5 hover:bg-[#2e3035]">
+                    <div
+                      className={`mt-0.5 grid h-10 w-10 shrink-0 place-items-center rounded-full text-sm font-bold text-white ${
+                        isMe ? 'bg-[#5865f2]' : 'bg-[#3ba55d]'
+                      }`}
+                    >
+                      {senderName?.[0]?.toUpperCase()}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-wrap items-baseline gap-2">
+                        <p className={`text-sm font-semibold ${isMe ? 'text-[#c9cdfb]' : 'text-white'}`}>
+                          {senderName}
+                        </p>
+                        {msg.createdAt && (
+                          <p className="text-[11px] text-[#80848e]">
+                            {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          </p>
+                        )}
+                      </div>
+                      <p className="break-words text-[15px] leading-6 text-[#dbdee1]">{msg.message}</p>
+                    </div>
+                  </div>
+                );
+              })}
+              <div ref={messagesEndRef} />
+            </div>
+
+            {(selectedUser || isGroup) && (
+              <div className="px-4 pb-6 pt-2">
+                <div className="flex items-center gap-3 rounded-lg bg-[#383a40] px-4 py-3">
+                  <input
+                    type="text"
+                    placeholder={`Message ${isGroup ? `#${activeRoom}` : selectedUser?.username}`}
+                    value={newMessage}
+                    onChange={(e) => setNewMessage(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
+                    className="min-w-0 flex-1 bg-transparent text-[15px] text-[#dbdee1] placeholder-[#949ba4] outline-none"
+                  />
+                  <button
+                    onClick={sendMessage}
+                    disabled={!newMessage.trim()}
+                    className="grid h-9 w-9 shrink-0 place-items-center rounded-md bg-[#5865f2] text-white transition hover:bg-[#4752c4] disabled:cursor-not-allowed disabled:opacity-40"
+                    aria-label="Send message"
+                  >
+                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                    </svg>
+                  </button>
                 </div>
               </div>
-            );
-          })}
-          <div ref={messagesEndRef} />
-        </div>
+            )}
+          </section>
 
-        {/* Input Area */}
-        {(selectedUser || isGroup) && (
-          <div className="bg-white border-t border-gray-200 p-3">
-            <div className="flex items-center gap-2 bg-gray-100 rounded-2xl px-4 py-2">
-              <input
-                type="text"
-                placeholder="Message likho..."
-                value={newMessage}
-                onChange={(e) => setNewMessage(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
-                className="flex-1 bg-transparent text-gray-800 placeholder-gray-400 focus:outline-none text-sm"
-              />
-              <button
-                onClick={sendMessage}
-                disabled={!newMessage.trim()}
-                className="w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center text-white disabled:opacity-40 disabled:cursor-not-allowed transition-all hover:shadow-lg hover:shadow-purple-500/30"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-                </svg>
-              </button>
+          <aside className="hidden w-60 shrink-0 border-l border-black/20 bg-[#2b2d31] px-3 py-5 xl:block">
+            <p className="mb-2 px-2 text-xs font-bold uppercase tracking-wide text-[#949ba4]">
+              Online - {onlineUsers.length}
+            </p>
+            <div className="space-y-1">
+              {onlineUsers.map((u) => (
+                <button
+                  key={`member-${u._id}`}
+                  onClick={() => selectUser(u)}
+                  className="flex w-full items-center gap-3 rounded px-2 py-2 text-left text-[#949ba4] transition hover:bg-[#35373c] hover:text-[#dbdee1]"
+                >
+                  <div className="relative">
+                    <div className="grid h-8 w-8 place-items-center rounded-full bg-[#5865f2] text-sm font-bold text-white">
+                      {u.username[0].toUpperCase()}
+                    </div>
+                    <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-[#2b2d31] bg-[#23a559]" />
+                  </div>
+                  <span className="truncate text-sm font-medium">{u.username}</span>
+                </button>
+              ))}
             </div>
-          </div>
-        )}
-      </div>
+          </aside>
+        </div>
+      </main>
     </div>
   );
 };

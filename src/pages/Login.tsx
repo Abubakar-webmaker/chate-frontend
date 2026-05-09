@@ -29,57 +29,62 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-800 flex items-center justify-center p-4">
-      <div className="bg-white/10 backdrop-blur-lg rounded-2xl shadow-2xl p-8 w-full max-w-md border border-white/20">
-
-        <div className="text-center mb-8">
-          <div className="text-5xl mb-3">💬</div>
-          <h1 className="text-3xl font-bold text-white">ChatApp</h1>
-          <p className="text-white/60 mt-1">Welcome back!</p>
+    <div className="grid min-h-screen place-items-center bg-[#1e1f22] px-4 py-8 text-[#dbdee1]">
+      <div className="w-full max-w-md rounded-lg bg-[#313338] p-8 shadow-2xl shadow-black/30">
+        <div className="mb-8 text-center">
+          <div className="mx-auto mb-4 grid h-16 w-16 place-items-center rounded-2xl bg-[#5865f2] text-2xl font-black text-white">
+            C
+          </div>
+          <h1 className="text-2xl font-bold text-white">Welcome back</h1>
+          <p className="mt-2 text-sm text-[#b5bac1]">Sign in to continue your conversations.</p>
         </div>
 
         {error && (
-          <div className="bg-red-500/20 border border-red-500/50 text-red-200 px-4 py-3 rounded-lg mb-4 text-sm">
+          <div className="mb-4 rounded-md border border-[#da373c]/50 bg-[#da373c]/15 px-4 py-3 text-sm text-[#ffb4b6]">
             {error}
           </div>
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="text-white/80 text-sm font-medium block mb-1">Email</label>
+            <label className="mb-2 block text-xs font-bold uppercase tracking-wide text-[#b5bac1]">
+              Email
+            </label>
             <input
               type="email"
               placeholder="email@example.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-transparent transition"
+              className="w-full rounded-md border border-[#1e1f22] bg-[#1e1f22] px-4 py-3 text-sm text-white outline-none transition placeholder:text-[#6d6f78] focus:border-[#5865f2]"
             />
           </div>
           <div>
-            <label className="text-white/80 text-sm font-medium block mb-1">Password</label>
+            <label className="mb-2 block text-xs font-bold uppercase tracking-wide text-[#b5bac1]">
+              Password
+            </label>
             <input
               type="password"
-              placeholder="••••••••"
+              placeholder="Enter your password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-transparent transition"
+              className="w-full rounded-md border border-[#1e1f22] bg-[#1e1f22] px-4 py-3 text-sm text-white outline-none transition placeholder:text-[#6d6f78] focus:border-[#5865f2]"
             />
           </div>
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-3 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-semibold rounded-xl transition-all duration-200 shadow-lg hover:shadow-purple-500/30 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full rounded-md bg-[#5865f2] py-3 text-sm font-semibold text-white transition hover:bg-[#4752c4] disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {loading ? 'Logging in...' : 'Login →'}
+            {loading ? 'Logging in...' : 'Login'}
           </button>
         </form>
 
-        <p className="text-center text-white/60 mt-6 text-sm">
-          Account nahi hai?{' '}
-          <Link to="/register" className="text-purple-300 hover:text-purple-200 font-medium">
-            Register karo
+        <p className="mt-6 text-center text-sm text-[#b5bac1]">
+          Need an account?{' '}
+          <Link to="/register" className="font-semibold text-[#949cf7] hover:text-white">
+            Register
           </Link>
         </p>
       </div>
